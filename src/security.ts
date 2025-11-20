@@ -1,4 +1,5 @@
-// Rate limiting: simple in-memory cache per IP
+// Rate limiting: per-worker-instance in-memory cache
+// Note: Not distributed across worker instances. For production, use Durable Objects or KV.
 const rateLimitCache = new Map<string, { count: number; resetAt: number }>();
 
 export function checkRateLimit(ip: string, limit: number = 10, windowMs: number = 60000): boolean {
@@ -7,6 +8,12 @@ export function checkRateLimit(ip: string, limit: number = 10, windowMs: number 
 
   if (!entry || entry.resetAt < now) {
     rateLimitCache.set(ip, { count: 1, resetAt: now + windowMs });
+    // Cleanup old entries to prevent memory leak
+    if (rateLimitCache.size > 10000) {
+      for (const [key, val] of rateLimitCache.entries()) {
+        if (val.resetAt < now) rateLimitCache.delete(key);
+      }
+    }
     return true;
   }
 

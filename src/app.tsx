@@ -30,19 +30,33 @@ async function auth() {
     }).then(r => r.json());
     
     const pk = {...opts, challenge: b64decode(opts.challenge), user: {...opts.user, id: b64decode(opts.user.id)}};
-    const cred = await navigator.credentials.create({publicKey: pk});
+    let cred;
+    try {
+      cred = await navigator.credentials.create({publicKey: pk});
+    } catch (e) {
+      if (e.message.includes('The user cancelled')) throw e;
+      status.textContent = 'Trying existing credential...';
+      cred = await navigator.credentials.get({publicKey: {challenge: pk.challenge, rpId: pk.rp.id, timeout: 60000, userVerification: 'preferred'}});
+    }
+    
     const resp = {
       id: cred.id,
       rawId: b64encode(cred.rawId),
-      response: {
+      response: cred.response.attestationObject ? {
         clientDataJSON: b64encode(cred.response.clientDataJSON),
         attestationObject: b64encode(cred.response.attestationObject),
+      } : {
+        clientDataJSON: b64encode(cred.response.clientDataJSON),
+        authenticatorData: b64encode(cred.response.authenticatorData),
+        signature: b64encode(cred.response.signature),
+        userHandle: cred.response.userHandle ? b64encode(cred.response.userHandle) : null,
       },
       type: cred.type,
       _sessionId
     };
     
-    await fetch('/webauthn/register/finish', {
+    const endpoint = cred.response.attestationObject ? '/webauthn/register/finish' : '/webauthn/login/finish';
+    await fetch(endpoint, {
       method: 'POST',
       body: JSON.stringify(resp),
       headers: {'Content-Type': 'application/json'}

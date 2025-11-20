@@ -85,15 +85,17 @@ Subsequent logins re-use the same credential (same biometric, no re-registration
 
 ## Security
 
-- ✅ Session signing with HMAC
-- ✅ Rate limiting on auth endpoints (10 reqs/min per IP)
+- ✅ Session signing with HMAC-SHA256
+- ✅ Rate limiting on auth endpoints (10 reqs/min per IP, per-instance)
 - ✅ CSRF protection (Origin/Referer validation)
 - ✅ Generic error messages (no user enumeration)
 - ✅ Counter rollback detection (cloned key protection)
-- ✅ Challenges stored in D1 with TTL (no in-memory leaks)
+- ✅ Challenges stored in D1 with automatic TTL cleanup
+- ✅ Sessions stored in D1 with automatic expiry cleanup
 - ✅ HttpOnly, Secure, SameSite=Strict cookies
 - ✅ Username validation (alphanumeric + underscore)
 - ✅ Input sanitization on agent output
+- ✅ Discoverable credentials (users don't need username to log in)
 
 ## Notes
 

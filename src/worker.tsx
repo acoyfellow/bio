@@ -17,7 +17,13 @@ export interface Env {
 const SESSION_DURATION = 7 * 24 * 60 * 60; // 7 days
 
 async function requireAuth(request: Request, env: Env): Promise<string> {
-  const sessionId = getSessionCookie(request);
+  const signedSessionId = getSessionCookie(request);
+  if (!signedSessionId) {
+    throw new Error("Unauthorized");
+  }
+
+  const secret = env.SESSION_SECRET || "dev-secret-change-in-prod";
+  const sessionId = await security.verifySession(signedSessionId, secret);
   if (!sessionId) {
     throw new Error("Unauthorized");
   }
@@ -35,13 +41,15 @@ const finishAuth = async (userId: string, env: Env) => {
   const authSessionId = crypto.randomUUID();
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_DURATION;
   const db = d1.getDb(env.DB);
+  const secret = env.SESSION_SECRET || "dev-secret-change-in-prod";
+  const signedSessionId = await security.signSession(authSessionId, secret);
   await d1.createSession(db, userId, authSessionId, expiresAt);
   return new Response(
     JSON.stringify({ success: true }),
     {
       headers: {
         "Content-Type": "application/json",
-        "Set-Cookie": setSessionCookie(authSessionId, SESSION_DURATION),
+        "Set-Cookie": setSessionCookie(signedSessionId, SESSION_DURATION),
       },
     }
   );
@@ -123,32 +131,21 @@ export default {
         return finishAuth(stored.userId!, env);
       }
 
-      // WebAuthn Login
+      // WebAuthn Login (for existing users with stored credentials)
       if (url.pathname === "/webauthn/login/start" && request.method === "POST") {
         const ip = request.headers.get("cf-connecting-ip") || "unknown";
         if (!security.checkRateLimit(ip, 10, 60000)) {
           return security.genericAuthError();
         }
 
-        const body = await request.json() as { username?: string };
-        const username = body.username || "user";
-
-        if (!security.validateUsername(username)) {
-          return security.genericAuthError();
-        }
-
-        const user = await d1.getUserByUsername(db, username);
-        if (!user) {
-          return security.genericAuthError();
-        }
-
-        const credentials = await db.select({ id: schema.credentials.id })
-          .from(schema.credentials)
-          .where(eq(schema.credentials.userId, user.id));
+        // For login, we fetch ALL credentials to present to the user
+        // This is a "discoverable credential" flow - user's authenticator knows which cred to use
+        const allCredentials = await db.select({ id: schema.credentials.id })
+          .from(schema.credentials);
 
         const rpId = url.hostname === "localhost" ? "localhost" : url.hostname;
         const options = await webauthn.startAuthentication(
-          credentials.map((c) => ({ id: c.id })),
+          allCredentials.map((c) => ({ id: c.id })),
           rpId
         );
         const sessionId = crypto.randomUUID();
@@ -241,6 +238,12 @@ export default {
             },
           }
         );
+      }
+
+      // Cleanup expired sessions/challenges (1% of requests to avoid overhead)
+      if (Math.random() < 0.01) {
+        await d1.cleanupExpiredSessions(db);
+        await challenges.cleanupExpiredChallenges(db);
       }
 
       return new Response("Not Found", { status: 404 });
