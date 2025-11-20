@@ -1,7 +1,6 @@
 export async function runAgent(userId: string): Promise<string> {
-  // Simple agent that returns a personalized message
-  // In a real implementation, you'd use the agents package API
-  // For now, return a simple response
+  // Placeholder agent that returns a personalized message..
+  // This is where you would integrate with your LLM or other agentic framework.
   return `Hello! This is your personal agent (user: ${userId}).`;
 }
 

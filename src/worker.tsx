@@ -80,7 +80,7 @@ export default {
         }
 
         const body = await request.json() as { username?: string };
-        const username = body.username || "user";
+        const username = body.username || `user_${Math.random().toString(36).substr(2, 9)}`;
 
         if (!security.validateUsername(username)) {
           return security.genericAuthError();
