@@ -19,7 +19,9 @@ const b64encode = buf => {
 };
 
 async function auth() {
-  setStatus('info', 'Authenticating...');
+  const status = document.getElementById('status');
+  status.className = 'info';
+  status.textContent = 'Authenticating...';
   try {
     const {_sessionId, ...opts} = await fetch('/webauthn/register/start', {
       method: 'POST',
@@ -46,22 +48,27 @@ async function auth() {
       headers: {'Content-Type': 'application/json'}
     });
     
-    setStatus('success', 'Authenticated! Reloading...');
+    status.className = 'success';
+    status.textContent = 'Authenticated! Reloading...';
     setTimeout(() => window.location.reload(), 500);
   } catch (e) {
-    setStatus('error', 'Auth failed: ' + e.message);
+    status.className = 'error';
+    status.textContent = 'Auth failed: ' + e.message;
   }
 }
 
-
 async function logout() {
-  setStatus('info', 'Logging out...');
+  const status = document.getElementById('status');
+  status.className = 'info';
+  status.textContent = 'Logging out...';
   try {
     await fetch('/logout', { method: 'POST' });
-    setStatus('success', 'Logged out! Reloading...');
+    status.className = 'success';
+    status.textContent = 'Logged out! Reloading...';
     setTimeout(() => window.location.reload(), 500);
   } catch (e) {
-    setStatus('error', 'Logout failed: ' + e.message);
+    status.className = 'error';
+    status.textContent = 'Logout failed: ' + e.message;
   }
 }
 `;

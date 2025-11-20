@@ -51,7 +51,7 @@ DOMAINS=yourdomain.com SESSION_SECRET=$(openssl rand -hex 32) bun run deploy
 
 ## Live Demo
 
-[https://bio.yourapp.com](https://bio.yourapp.com)
+[https://bio.coey.dev](https://bio.coey.dev)
 
 **Source**: [github.com/acoyfellow/bio](https://github.com/acoyfellow/bio)
 
