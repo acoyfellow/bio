@@ -1,0 +1,24 @@
+{
+  "name": "bio",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun db:generate && npx alchemy dev",
+    "deploy": "npx alchemy deploy",
+    "destroy": "npx alchemy destroy",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^13.2.2",
+    "agents": "^0.2.23",
+    "hono": "^4.10.6",
+    "drizzle-orm": "^0.44.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251120.0",
+    "@types/node": "^24.10.1",
+    "alchemy": "^0.78.0",
+    "drizzle-kit": "^0.31.7",
+    "typescript": "^5.9.3"
+  }
+}
