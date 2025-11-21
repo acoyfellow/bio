@@ -2,6 +2,36 @@
 
 A minimal, pragmatic biometric authentication system on Cloudflare Workers with SSR and WebAuthn.
 
+## Bio as a Primitive
+
+This isn't just a login demo - it's a building block for human-in-the-loop systems.
+
+**The Pattern:**
+
+Passkeys provide cryptographic proof of human intent at a specific moment. Not "this user logged in yesterday" - but "a real human with physical access to this device approved this action right now."
+
+**Use Cases:**
+
+- **Agent Authorization**: AI wants to send an email? Delete 1000 messages? Require biometric signature before execution.
+
+- **Time-bound Delegation**: Sign once to authorize "AI can read my email for 8 hours" - revokable at any time.
+
+- **High-stakes Operations**: Financial transactions, data deletion, permission changes - anything that shouldn't happen without explicit human approval.
+
+- **Multi-device Control**: Each device gets its own passkey. Revoke access per-device. Track which device authorized what.
+
+**Why Passkeys:**
+
+- Phishing-resistant (bound to your domain)
+
+- No passwords to leak
+
+- Works across devices via cloud sync
+
+- Native OS integration (Face ID, Touch ID, Windows Hello)
+
+The future of AI agents isn't "give them full access" - it's "they request, humans authorize, cryptographically."
+
 ## What This Is
 
 Single "Auth" button flow:
@@ -113,4 +143,3 @@ Subsequent logins re-use the same credential (same biometric, no re-registration
 - **Secure**: WebAuthn + server-validated sessions
 
 No magic, no overthinking. Auth that just works.
-
